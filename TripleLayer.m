@@ -6,7 +6,7 @@ clear;close all
 
 %% Define parameters
 % Material properties
-D_1=0.013769; % Define diffusivity of cathode material [um^2/s] (LSCF)
+D_1=0.013769; % Define diffusivity of first layer [um^2/s] (LSCF)
 D_2=0.0021;  % Define diffusivity of electrolyte material [um^2/s] (GDC)
 D_3=0.01; % Define diffusivity of the third layer [um^2/s] (YSZ)
 k=0.0013564; % Define surface exchange coefficient of LSCF [um/s]
