@@ -1,4 +1,4 @@
-Dk0 = [9,264,100,0.017]; %Initial guesses for DLSCF, DGDC, DINT and k in that order
+Dk0 = [0.009,0.264,0.00100,0.0017]; %Initial guesses for DLSCF, DGDC, DINT and k in that order
 
 
 options = optimset('MaxFunEvals',2000, 'TolFun',1e-6,'TolX',1e-6);

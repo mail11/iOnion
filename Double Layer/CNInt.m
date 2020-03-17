@@ -1,99 +1,93 @@
 function C = CNInt(Dk)
 
-% DLSCF=10; % Define diffusivity of material [um^2/s] (LSCF)
-% DGDC=50;
-% D_int=10;
-% k=0.0469; %define k [um/s]
-Duration=.083; %hours
-l1 = 25; %length of LSCF, um
-l2 = 75; %length of GDC, um
-Length=l1+l2; %um
-int_wid=2;
+%% Define parameters
 
-delta_x=2; % Define the spatial step [um]
-delta_t=2; % Define the time step [s] 
+int_width=0;% Define the width of the interface region (0 is the default value)
 
-steps_t=Duration*3600/delta_t+1; % Define number of time steps
+% Experimental setup
+Duration=.083; % Time of exchange in hours (found with Kiloran correction)
+L_1 = 0.3; % Length of LSCF [um]
+L_2 = 0.7; % Length of GDC [um]
+
+% Simulation parameters
+delta_x=.01; % Define the spatial step [um]
+delta_t=2; % Define the time step [s] (this should be a derived parameter based on max value of sigma)
+
+% Derived properties
+%D_int=2*(r/delta_x+1/D_LSCF+1/D_GDC)^-1; % Define the diffusivity of the interface [um^2/s]
+Length=L_1+L_2; % Total sample length [um]
 steps_x=Length/delta_x+1; % Define number of spatial nodes
-
-x=0:delta_x:Length;
-sigmaLSCF=Dk(1)*delta_t/2*delta_x^2; %Calculate sigma
-sigmaGDC=Dk(2)*delta_t/2*delta_x^2; %Calculate sigma
-sigma_int=Dk(3)*delta_t/2*delta_x^2;%Interfacial Resistance
-h=Dk(4)/Dk(1); %calculate h
+steps_t=Duration*3600/delta_t+1; % Define number of time steps
+x=0:delta_x:Length; % Define the length of the profile in steps of delta_x
+sigmaLSCF=Dk(1)*(delta_t)/(2*delta_x^2); % Calculate sigma of LSCF
+sigmaGDC=Dk(2)*(delta_t)/(2*delta_x^2); % Calculate sigma of GDC
+sigma_int=Dk(3)*(delta_t)/(2*delta_x^2);% Calculate sigma of the first interface
+h=Dk(4)/Dk(1); %Calculate h
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-L = full(gallery('tridiag',l1/delta_x,sigmaLSCF,1-2*sigmaLSCF,sigmaLSCF));
-L(1,1) = 1-2*sigmaLSCF*(1+delta_x*h);
-L(1,2) = 2*sigmaLSCF;
+%% Build simulation components
+% Set up a sub-matrix L which contains the information regarding the surface exchange as well as diffusion through the LSCF layer
+Layer1 = full(gallery('tridiag',round(L_1/delta_x),sigmaLSCF,1-2*sigmaLSCF,sigmaLSCF)); % Bulk diffusion parameters
+Layer1(1,1) = 1-2*sigmaLSCF*(1+delta_x*h); %Surface boundary condition
+Layer1(1,2) = 2*sigmaLSCF; %Surface boundary condition
 
+% Set up a sub-matrix E for the bulk diffusion properties of the electrolyte
+Layer2 = full(gallery('tridiag',round((L_2-delta_x)/delta_x)+2,sigmaGDC,1-2*sigmaGDC,sigmaGDC)); %Bulk diffusion parameters
+Layer2(end,end) = 1+sigmaGDC; %Mirror boundary condition parameters
+Layer2(end,end-1) = -2*sigmaGDC;
+Layer2(end,end-2) = sigmaGDC;
 
-E = full(gallery('tridiag',(l2-1)/delta_x,sigmaGDC,1-2*sigmaGDC,sigmaGDC));
-E(end,end) = 1+sigmaGDC;
-E(end,end-1) = -2*sigmaGDC;
-E(end,end-2) = sigmaGDC;
+% Set up the main matrix which combines L, E and interface properties into one
+A = full(gallery('tridiag',round(steps_x),sigmaGDC,1-2*sigmaGDC,sigmaGDC)); % Create a tridiagonal basis using the electrolyte values
+A(1:L_1/delta_x,1:L_1/delta_x)=Layer1; %integrate the sub-matrix L into the main matrix
+A(round((Length-L_2)/delta_x)+1:end,round((Length-L_2)/delta_x)+1:end)=Layer2; %integrate the sub-matrix E into the main matrix
 
-An = full(gallery('tridiag',steps_x,sigmaGDC,1-2*sigmaGDC,sigmaGDC));
-An(1:l1/delta_x,1:l1/delta_x)=L;
-
-
-
-An(Length-(l2-1)/delta_x+2:end,Length-(l2-1)/delta_x+2:end)=E;
-
-
-
-for l=l1:l1+int_wid
-    An(l,l-1) = sigma_int;
-    An(l,l) = 1-2*sigma_int;
-    An(l,l+1) = sigma_int;
+%Set up the part of the matrix at the interface with varying width
+for l=L_1/delta_x:L_1/delta_x+int_width % Creates a loop which ensures that the tridiagonal matrix at the interface is set up with varying interface width
+    A(l,l-1) = sigma_int;
+    A(l,l) = 1-2*sigma_int;
+    A(l,l+1) = sigma_int;
 end
 
-
-% An(l1+1,l1) = sigmaLSCF;
- An(l1+int_wid,l1+1+int_wid) = sigmaGDC;
- An(l1+1+int_wid,l1+int_wid) = sigma_int;
-
+A(L_1/delta_x+int_width,L_1/delta_x+1+int_width) = sigmaGDC;
+A(L_1/delta_x+1+int_width,L_1/delta_x+int_width) = sigma_int; % Manual modification to ensure the matrix is set up correctly
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Ln1 = full(gallery('tridiag',l1/delta_x,-sigmaLSCF,1+2*sigmaLSCF,-sigmaLSCF));
-Ln1(1,1) = 1+2*sigmaLSCF*(1+delta_x*h);
-Ln1(1,2) = -2*sigmaLSCF;
 
+%Setting up the transformation matrix for the next timestep A(n+1), which
+%is just the same as the previous matrix but with flipped signs.
 
-En1 = full(gallery('tridiag',(l2-1)/delta_x,-sigmaGDC,1+2*sigmaGDC,-sigmaGDC));
-En1(end,end) = 1-sigmaGDC;
-En1(end,end-1) = 2*sigmaGDC;
-En1(end,end-2) = -sigmaGDC;
+Layer1_n = full(gallery('tridiag',round(L_1/delta_x),-sigmaLSCF,1+2*sigmaLSCF,-sigmaLSCF));
+Layer1_n(1,1) = 1+2*sigmaLSCF*(1+delta_x*h);
+Layer1_n(1,2) = -2*sigmaLSCF;
 
-An1 = full(gallery('tridiag',steps_x,-sigmaGDC,1+2*sigmaGDC,-sigmaGDC));
-An1(1:l1/delta_x,1:l1/delta_x)=Ln1;
+Layer2_n = full(gallery('tridiag',round((L_2-delta_x)/delta_x)+2,-sigmaGDC,1+2*sigmaGDC,-sigmaGDC));
+Layer2_n(end,end) = 1-sigmaGDC;
+Layer2_n(end,end-1) = 2*sigmaGDC;
+Layer2_n(end,end-2) = -sigmaGDC;
 
+A_n = full(gallery('tridiag',round(steps_x),-sigmaGDC,1+2*sigmaGDC,-sigmaGDC));
+A_n(1:L_1/delta_x,1:L_1/delta_x)=Layer1_n;
+A_n(round((Length-L_2)/delta_x)+1:end,round((Length-L_2)/delta_x)+1:end)=Layer2_n;
 
-
-An1(Length-(l2-1)/delta_x+2:end,Length-(l2-1)/delta_x+2:end)=En1;
-
-
-for l=l1:l1+int_wid
-    An1(l,l-1) = -sigma_int;
-    An1(l,l) = 1+2*sigma_int;
-    An1(l,l+1) = -sigma_int;
+for l=L_1/delta_x:(L_1+int_width)/delta_x
+    A_n(l,l-1) = -sigma_int;
+    A_n(l,l) = 1+2*sigma_int;
+    A_n(l,l+1) = -sigma_int;
 end
 
-% An1(l1+1,l1) = -sigmaLSCF;
-An1(l1+int_wid,l1+1+int_wid) = -sigmaGDC;
-An1(l1+1+int_wid,l1+int_wid) = -sigma_int;
+A_n(L_1/delta_x+int_width,L_1/delta_x+1+int_width) = -sigmaGDC;
+A_n(L_1/delta_x+1+int_width,L_1/delta_x+int_width) = -sigma_int;
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-G = zeros(steps_x, 1);
+% Define surface exchange vector
+G = zeros(round(steps_x), 1);
 G(1) = 4*delta_x*sigmaLSCF*h; %surface boundary condition vector G
 
-C = zeros(steps_x,1);%Initial position vector, 0 everywhere
+C = zeros(round(steps_x),1);%Initial position vector, 0 everywhere
 
 for t=1:steps_t
     
-    C = An1\(An*C+G);
+    C = A_n\(A*C+G);
     plot(x,C);
     xlim([0 Length])
     ylim([0.06 inf]);
