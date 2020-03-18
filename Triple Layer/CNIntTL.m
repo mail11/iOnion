@@ -8,8 +8,7 @@ function C = CNIntTL(Dk)
 
 %% Define parameters
 
-load TripleLayerProfile.txt;
-data = TripleLayerProfile;
+global data;
 
 % Material properties
 % Dk(1)=0.016; % Define diffusivity of cathode material [um^2/s] (LSCF)

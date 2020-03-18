@@ -2,9 +2,7 @@ function C = CNInt(Dk)
 
 %% Define parameters
 
-load DBLayerProfile.txt;
-data = DBLayerProfile;
-
+global data;
 int_width=0;% Define the width of the interface region (0 is the default value)
 
 % Experimental setup
@@ -88,16 +86,11 @@ G(1) = 4*delta_x*sigmaLSCF*h; %surface boundary condition vector G
 
 C = zeros(round(steps_x),1);%Initial position vector, 0 everywhere
 
+%% Run the iterative matrix calculation
+
 for t=1:steps_t
     
-    C = A_n\(A*C+G);
-    plot(x,C);
-    xlim([0 Length])
-    ylim([0.06 inf]);
-    xlabel('Distance, x / microns')
-    ylabel('Concentration, C')
-%     drawnow
-    
+    C = A_n\(A*C+G);   
  
 end
     
