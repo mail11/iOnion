@@ -2,6 +2,9 @@ function C = CNInt(Dk)
 
 %% Define parameters
 
+load DBLayerProfile.txt;
+data = DBLayerProfile;
+
 int_width=0;% Define the width of the interface region (0 is the default value)
 
 % Experimental setup
@@ -10,12 +13,12 @@ L_1 = 0.3; % Length of LSCF [um]
 L_2 = 0.7; % Length of GDC [um]
 
 % Simulation parameters
-delta_x=.01; % Define the spatial step [um]
 delta_t=2; % Define the time step [s] (this should be a derived parameter based on max value of sigma)
 
 % Derived properties
 %D_int=2*(r/delta_x+1/D_LSCF+1/D_GDC)^-1; % Define the diffusivity of the interface [um^2/s]
 Length=L_1+L_2; % Total sample length [um]
+delta_x=Length/(length(data)-1); % Define the spatial step [um]
 steps_x=Length/delta_x+1; % Define number of spatial nodes
 steps_t=Duration*3600/delta_t+1; % Define number of time steps
 x=0:delta_x:Length; % Define the length of the profile in steps of delta_x
