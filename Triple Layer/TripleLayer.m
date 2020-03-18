@@ -44,7 +44,7 @@ Layer1(1,1) = 1-2*sigma_1*(1+delta_x*h); %Surface boundary condition
 Layer1(1,2) = 2*sigma_1; %Surface boundary condition
 
 % Set up a sub-matrix E for the bulk diffusion properties of the electrolyte
-Layer2 = full(gallery('tridiag',round((L_2-delta_x)/delta_x),sigma_2,1-2*sigma_2,sigma_2)); %Bulk diffusion parameters
+Layer2 = full(gallery('tridiag',round((L_2-delta_x)/delta_x+1),sigma_2,1-2*sigma_2,sigma_2)); %Bulk diffusion parameters
 
 % Set up a sub-matrix S for the bulk diffusion properties of the substrate
 Layer3 = full(gallery('tridiag',round((L_3-delta_x)/delta_x)+2,sigma_3,1-2*sigma_3,sigma_3)); %Bulk diffusion parameters
@@ -54,30 +54,30 @@ Layer3(end,end-2) = sigma_3;
 
 % Set up the main matrix which combines L, E, S and interface properties into one
 A = full(gallery('tridiag',round(steps_x),sigma_2,1-2*sigma_2,sigma_2)); % Create a tridiagonal basis using the electrolyte values
-A(1:L_1/delta_x,1:L_1/delta_x)=Layer1; %integrate the sub-matrix L into the main matrix
-A(1+(L_1/delta_x):(L_2+L_1)/delta_x-1,1+(L_1/delta_x):((L_2+L_1)/delta_x)-1)=Layer2; %integrate the sub-matrix E into the main matrix
+A(1:round(L_1/delta_x),1:round(L_1/delta_x))=Layer1; %integrate the sub-matrix L into the main matrix
+A(1+round(L_1/delta_x):round((L_2+L_1)/delta_x),1+round(L_1/delta_x):round((L_2+L_1)/delta_x))=Layer2; %integrate the sub-matrix E into the main matrix
 A(round((Length-L_3)/delta_x)+1:end,round((Length-L_3)/delta_x)+1:end)=Layer3; %integrate the sub-matrix S into the main matrix
 
 %Set up the part of the matrix at the interface with varying width
-for l1=L_1/delta_x:L_1/delta_x+int_width % Creates a loop which ensures that the tridiagonal matrix at the interface is set up with varying interface width
+for l1=round(L_1/delta_x):round(L_1/delta_x)+int_width % Creates a loop which ensures that the tridiagonal matrix at the interface is set up with varying interface width
     A(l1,l1-1) = sigma_int1;
     A(l1,l1) = 1-2*sigma_int1;
     A(l1,l1+1) = sigma_int1;
 end
 
-A(L_1/delta_x+int_width,L_1/delta_x+1+int_width) = sigma_2;
-A(L_1/delta_x+1+int_width,L_1/delta_x+int_width) = sigma_int1; % Manual modification to ensure the matrix is set up correctly
+A(round(L_1/delta_x)+int_width,round(L_1/delta_x)+1+int_width) = sigma_2;
+A(round(L_1/delta_x)+1+int_width,round(L_1/delta_x)+int_width) = sigma_int1; % Manual modification to ensure the matrix is set up correctly
 
 
 %Set up the part of the matrix at the second interface with varying width
-for l2=(L_1+L_2)/delta_x:(L_1+L_2)/delta_x+int_width % Creates a loop which ensures that the tridiagonal matrix at the interface is set up with varying interface width
+for l2=round((L_1+L_2)/delta_x):round((L_1+L_2)/delta_x)+int_width % Creates a loop which ensures that the tridiagonal matrix at the interface is set up with varying interface width
     A(l2,l2-1) = sigma_int2;
     A(l2,l2) = 1-2*sigma_int2;
     A(l2,l2+1) = sigma_int2;
 end
 
-A((L_1+L_2)/delta_x+int_width,(L_2+L_1)/delta_x+1+int_width) = sigma_3;
-A((L_1+L_2)/delta_x+1+int_width,(L_2+L_1)/delta_x+int_width) = sigma_int2; % Manual modification to ensure the matrix is set up correctly
+A(round((L_1+L_2)/delta_x)+int_width,round((L_2+L_1)/delta_x)+1+int_width) = sigma_3;
+A(round((L_1+L_2)/delta_x)+1+int_width,round((L_2+L_1)/delta_x)+int_width) = sigma_int2; % Manual modification to ensure the matrix is set up correctly
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -90,7 +90,7 @@ Layer1_n(1,1) = 1+2*sigma_1*(1+delta_x*h); %Surface boundary condition
 Layer1_n(1,2) = -2*sigma_1; %Surface boundary condition
 
 % Set up a sub-matrix E for the bulk diffusion properties of the electrolyte
-Layer2_n = full(gallery('tridiag',round((L_2-delta_x)/delta_x),-sigma_2,1+2*sigma_2,-sigma_2)); %Bulk diffusion parameters
+Layer2_n = full(gallery('tridiag',round((L_2-delta_x)/delta_x+1),-sigma_2,1+2*sigma_2,-sigma_2)); %Bulk diffusion parameters
 
 % Set up a sub-matrix S for the bulk diffusion properties of the substrate
 Layer3_n = full(gallery('tridiag',round((L_3-delta_x)/delta_x)+2,-sigma_3,1+2*sigma_3,-sigma_3)); %Bulk diffusion parameters
@@ -100,30 +100,30 @@ Layer3_n(end,end-2) = -sigma_3;
 
 % Set up the main matrix which combines L, E, S and interface properties into one
 A_n = full(gallery('tridiag',round(steps_x),-sigma_2,1+2*sigma_2,-sigma_2)); % Create a tridiagonal basis using the electrolyte values
-A_n(1:L_1/delta_x,1:L_1/delta_x)=Layer1_n; %integrate the sub-matrix L into the main matrix
-A_n(1+(L_1/delta_x):(L_2+L_1)/delta_x-1,1+(L_1/delta_x):((L_2+L_1)/delta_x)-1)=Layer2_n; %integrate the sub-matrix E into the main matrix
+A_n(1:round(L_1/delta_x),1:round(L_1/delta_x))=Layer1_n; %integrate the sub-matrix L into the main matrix
+A_n(1+round(L_1/delta_x):round((L_2+L_1)/delta_x),1+round(L_1/delta_x):(round((L_2+L_1)/delta_x)))=Layer2_n; %integrate the sub-matrix E into the main matrix
 A_n(round((Length-L_3)/delta_x)+1:end,round((Length-L_3)/delta_x)+1:end)=Layer3_n; %integrate the sub-matrix S into the main matrix
 
 %Set up the part of the matrix at the interface with varying width
-for l1=L_1/delta_x:L_1/delta_x+int_width % Creates a loop which ensures that the tridiagonal matrix at the interface is set up with varying interface width
+for l1=round(L_1/delta_x):round(L_1/delta_x)+int_width % Creates a loop which ensures that the tridiagonal matrix at the interface is set up with varying interface width
     A_n(l1,l1-1) = -sigma_int1;
     A_n(l1,l1) = 1+2*sigma_int1;
     A_n(l1,l1+1) = -sigma_int1;
 end
 
-A_n(L_1/delta_x+int_width,L_1/delta_x+1+int_width) = -sigma_2;
-A_n(L_1/delta_x+1+int_width,L_1/delta_x+int_width) = -sigma_int1; % Manual modification to ensure the matrix is set up correctly
+A_n(round(L_1/delta_x)+int_width,round(L_1/delta_x)+1+int_width) = -sigma_2;
+A_n(round(L_1/delta_x)+1+int_width,round(L_1/delta_x)+int_width) = -sigma_int1; % Manual modification to ensure the matrix is set up correctly
 
 
 %Set up the part of the matrix at the second interface with varying width
-for l2=(L_2+L_1)/delta_x:(L_2+L_1)/delta_x+int_width % Creates a loop which ensures that the tridiagonal matrix at the interface is set up with varying interface width
+for l2=round((L_2+L_1)/delta_x):round((L_2+L_1)/delta_x)+int_width % Creates a loop which ensures that the tridiagonal matrix at the interface is set up with varying interface width
     A_n(l2,l2-1) = -sigma_int2;
     A_n(l2,l2) = 1+2*sigma_int2;
     A_n(l2,l2+1) = -sigma_int2;
 end
 
-A_n((L_1+L_2)/delta_x+int_width,(L_2+L_1)/delta_x+1+int_width) = -sigma_3;
-A_n((L_1+L_2)/delta_x+1+int_width,(L_2+L_1)/delta_x+int_width) = -sigma_int2; % Manual modification to ensure the matrix is set up correctly
+A_n(round((L_1+L_2)/delta_x)+int_width,round((L_2+L_1)/delta_x)+1+int_width) = -sigma_3;
+A_n(round((L_1+L_2)/delta_x)+1+int_width,round((L_2+L_1)/delta_x)+int_width) = -sigma_int2; % Manual modification to ensure the matrix is set up correctly
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
