@@ -26,8 +26,8 @@ if str2double(answer(2)) == 1
     steps_x=Length/delta_x+1; % Define number of spatial nodes
     steps_t=Duration*3600/delta_t+1; % Define number of time steps
     x=0:delta_x:Length; % Define the length of the profile in steps of delta_x
-    sigma_1=Dk(1)*(delta_t)/(2*delta_x^2); % Calculate sigma of LSCF
-    h=Dk(2)/Dk(1); %Calculate h
+    sigma_1=(10^(Dk(1)))*(delta_t)/(2*delta_x^2); % Calculate sigma of LSCF
+    h=(10^(Dk(2)))/(10^(Dk(1))); %Calculate h
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% Build simulation components
@@ -60,10 +60,10 @@ elseif str2double(answer(2)) == 2 % If there are two layers, fminsearch will cal
     steps_x=Length/delta_x+1; % Define number of spatial nodes
     steps_t=Duration*3600/delta_t+1; % Define number of time steps
     x=0:delta_x:Length; % Define the length of the profile in steps of delta_x
-    sigma_1=Dk(1)*(delta_t)/(2*delta_x^2); % Calculate sigma of LSCF
-    sigma_2=Dk(2)*(delta_t)/(2*delta_x^2); % Calculate sigma of GDC
-    sigma_int=Dk(3)*(delta_t)/(2*delta_x^2);% Calculate sigma of the first interface
-    h=Dk(4)/Dk(1); %Calculate h
+    sigma_1=(10^(Dk(1)))*(delta_t)/(2*delta_x^2); % Calculate sigma of LSCF
+    sigma_2=(10^(Dk(2)))*(delta_t)/(2*delta_x^2); % Calculate sigma of GDC
+    sigma_int=(10^(Dk(3)))*(delta_t)/(2*delta_x^2);% Calculate sigma of the first interface
+    h=(10^(Dk(4)))/(10^(Dk(1))); %Calculate h
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% Build simulation components
@@ -125,18 +125,18 @@ elseif str2double(answer(2)) == 3 % Set up a matric calculation with three layer
     %% Three layers
     
     % Derived properties
-    %D_int=2*(r/delta_x+1/Dk(1)+1/Dk(2))^-1; % Define the diffusivity of the interface [um^2/s]
+    %D_int=2*(r/delta_x+1/(10^(Dk(1)))+1/(10^(Dk(2))))^-1; % Define the diffusivity of the interface [um^2/s]
     Length=L_1+L_2+L_3; % Total sample length [um]
     delta_x=Length/(length(data)-1);
     steps_x=Length/delta_x+1; % Define number of spatial nodes
     steps_t=Duration*3600/delta_t+1; % Define number of time steps
     x=0:delta_x:Length; % Define the length of the profile in steps of delta_x
-    sigma_1=Dk(1)*(delta_t)/(2*delta_x^2); % Calculate sigma of LSCF
-    sigma_2=Dk(2)*(delta_t)/(2*delta_x^2); % Calculate sigma of GDC
-    sigma_3=Dk(3)*(delta_t)/(2*delta_x^2); % Calculate sigma of YSZ
-    sigma_int1=Dk(4)*(delta_t)/(2*delta_x^2);% Calculate sigma of the first interface
-    sigma_int2=Dk(5)*(delta_t)/(2*delta_x^2);% Calculate sigma of the second interface
-    h=Dk(6)/Dk(1); %Calculate h
+    sigma_1=(10^(Dk(1)))*(delta_t)/(2*delta_x^2); % Calculate sigma of LSCF
+    sigma_2=(10^(Dk(2)))*(delta_t)/(2*delta_x^2); % Calculate sigma of GDC
+    sigma_3=(10^(Dk(3)))*(delta_t)/(2*delta_x^2); % Calculate sigma of YSZ
+    sigma_int1=(10^(Dk(4)))*(delta_t)/(2*delta_x^2);% Calculate sigma of the first interface
+    sigma_int2=(10^(Dk(5)))*(delta_t)/(2*delta_x^2);% Calculate sigma of the second interface
+    h=(10^(Dk(6)))/(10^(Dk(1))); %Calculate h
     
     
     %% Build simulation components
