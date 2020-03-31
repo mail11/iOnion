@@ -1,4 +1,4 @@
-function [Dk,data,cn] = CNIntFitting(C,data)
+function [Dk,data,cn] = CNIntFitting(Duration,data,Length_um,L)
 
 %% Define global variables
 % This ensures that the following variables are the same across all
@@ -6,11 +6,13 @@ function [Dk,data,cn] = CNIntFitting(C,data)
 
 global steps_x;
 global data;
-global L_1;
-global L_2;
-global L_3;
-global answer;
 global Duration;
+global Layers;
+global Length_um;
+global L;
+L = [0;0;0];
+C_bg = 0.02;
+C_gas = 0.98;
 DeveloperMode = 1;
 
 if DeveloperMode == 0
@@ -21,38 +23,40 @@ if DeveloperMode == 0
     dims = 1;
     definput = {'1.0','2','0.083'};
     answer = inputdlg(prompt,dlgtitle,dims,definput);
-    Duration = str2double(answer(3)); % Defines the experiment time
+    Length_um=str2double(answer(1)); % Provides the physical scaling of the fitting data
+    Layers=str2double(answer(2)); % Determines for how many layers the optimisation should run
+    Duration=str2double(answer(3));% Defines the experiment time
     
     [FileName, PathName] = uigetfile('*.*'); % Call a pop-up UI feature that allows the user to select data files
-    data=transpose(textread([PathName,'\',FileName],'%n')'); % Reads the data file
+    data=(transpose(textread([PathName,'\',FileName],'%n')')-C_bg)/(C_gas-C_bg); % Reads the data file
     
     %% Extracting information from the data file
     
-    if str2double(answer(2))== 1 % If there is only one single material
+    if Layers == 1 % If there is only one single material
         
-        scale = (length(data)-1)/str2double(answer(1));
-        L_1 = length(data)/scale;
-        L_2 = 0;
-        L_3 = 0;
+        scale = (length(data)-1)/Length_um;
+        L(1) = length(data)/scale;
+        L(2) = 0;
+        L(3) = 0;
         
-    elseif str2double(answer(2)) == 2 % Set the case for two layers and only picking one data point
+    elseif Layers == 2 % Set the case for two layers and only picking one data point
         
         plot(data)
         [x] = ginput(1); % Asks the user to select a point on the graph to mark the interface location, then extracts the x value of that point
-        scale = (length(data)-1)/str2double(answer(1)); % Sets a scaling factor based on the user input to allow conversion of the x values from the datafile into real lengths
-        L_1 = x(1)/scale; % Determines the length of the first layer based on user input
-        L_2 = (length(data)-1)/scale-L_1; % Determines the length of the second layer
-        L_3 = 0;
+        scale = (length(data)-1)/Length_um; % Sets a scaling factor based on the user input to allow conversion of the x values from the datafile into real lengths
+        L(1) = x(1)/scale; % Determines the length of the first layer based on user input
+        L(2) = (length(data)-1)/scale-L(1); % Determines the length of the second layer
+        L(3) = 0;
         close
         
-    elseif str2double(answer(2)) == 3 % Set the case for three layers and picking two data points
+    elseif Layers == 3 % Set the case for three layers and picking two data points
         
         plot(data)
         [x] = ginput(2); % Asks the user to select a point on the graph to mark the interface location, then extracts the x value of that point
-        scale = (length(data)-1)/str2double(answer(1));
-        L_1 = x(1)/scale;
-        L_2 = x(2)/scale;
-        L_3 = (length(data)-1)/scale-(L_1+L_2);
+        scale = (length(data)-1)/Length_um;
+        L(1) = x(1)/scale;
+        L(2) = x(2)/scale;
+        L(3) = (length(data)-1)/scale-(L(1)+L(2));
         close
     end
     
@@ -60,11 +64,11 @@ if DeveloperMode == 0
     
     fun = @(Dk) sum((data-CNInt(Dk)).^2); % set up the sum squared function
     
-    if str2double(answer(2)) == 1 % Condition for a single material
+    if Layers == 1 % Condition for a single material
         Dk0 = log([0.1,0.1]); % D and k
-    elseif    str2double(answer(2)) == 2 % Ensures that 4 variables are run in fminsearch
+    elseif    Layers == 2 % Ensures that 4 variables are run in fminsearch
         Dk0 = log([0.009,0.264,0.00100,0.0017]); % Initial guesses for DLSCF, DGDC, DINT and k in that order
-    elseif str2double(answer(2)) == 3 % Ensures that 6 variables are run
+    elseif Layers == 3 % Ensures that 6 variables are run
         Dk0 = log([0.1,0.1,0.1,0.1,1,0.1]); %Initial guesses for D1, D2, D3, DINT1, DINT 2 and k in that order
     end
     
@@ -73,11 +77,11 @@ if DeveloperMode == 0
     
     % Change the output depending on how many variables are fitted
     
-    if str2double(answer(2)) == 1
+    if Layers == 1
         disp(['D1 = ',num2str((10^(Dk(1)))),' k = ',num2str((10^(Dk(2))))]);
-    elseif str2double(answer(2)) == 2
+    elseif Layers == 2
         disp(['D1 = ',num2str((10^(Dk(1)))),'  D2 = ',num2str((10^(Dk(2)))),' DINT = ',num2str((10^(Dk(3)))),' k = ',num2str((10^(Dk(4))))]); % display the output variables
-    elseif str2double(answer(2)) == 3
+    elseif Layers == 3
         disp(['D1 = ',num2str((10^(Dk(1)))),'  D2 = ',num2str((10^(Dk(2)))),' D3 = ',num2str((10^(Dk(3)))),' DINT1 = ',num2str((10^(Dk(4)))),' DINT2 = ',num2str((10^(Dk(5)))),' k = ',num2str((10^(Dk(6))))]); % display the output variables
     end
     
@@ -86,12 +90,10 @@ if DeveloperMode == 0
 elseif DeveloperMode == 1
     
     data=load('GenNoiseInt.txt');
-    L_1 = 0.3;
-    L_2 = 0.7;
-    L_3 = 0;
-    answer = cell(3,1);
-    answer(2) = {'2'};
-    str2double(answer(2));
+    L(1) = 0.3;
+    L(2) = 0.7;
+    L(3) = 0;
+    Layers = 2;
     Duration = 0.083;
     
     fun = @(Dk) sum((data-CNInt(Dk)).^2);
@@ -102,14 +104,14 @@ elseif DeveloperMode == 1
     options = optimset('MaxFunEvals',2000, 'TolFun',1e-6,'TolX',1e-6);
     [Dk, fminres] = fminsearch(fun,Dk0,options);
     
-
-    disp(['DLSCF = ',num2str((10^(Dk(1)))),'  DGDC = ',num2str((10^(Dk(2)))),' DINT = ',num2str((10^(Dk(3)))),' k = ',num2str((10^(Dk(4)))));
+    
+    disp(['DLSCF = ',num2str((10^(Dk(1)))),'  DGDC = ',num2str((10^(Dk(2)))),' DINT = ',num2str((10^(Dk(3)))),' k = ',num2str((10^(Dk(4))))]);
     
 end
 %% plotting
 
 cn=CNInt(Dk); % Calls the final output from the fitting algorithm
-x=linspace(0,L_1+L_2+L_3,steps_x); % Set up x values in accordance with the real scale of the data
+x=linspace(0,L(1)+L(2)+L(3),steps_x); % Set up x values in accordance with the real scale of the data
 plot(x,cn)
 hold on
 plot(x,data, '.')
