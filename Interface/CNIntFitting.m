@@ -11,21 +11,21 @@ global Layers;
 global Length_um;
 global L;
 L = [0;0;0];
-C_bg = 0.02;
-C_gas = 0.98;
 DeveloperMode = 1;
 
 if DeveloperMode == 0
     %% Getting the data file
     
-    prompt = {'Enter length of the profile in micrometers','Enter number of layers','Experiment time in h'}; % Creates a pop-up window that asks the user to enter the physical length of the diffusion profile in microns
+    prompt = {'Enter length of the profile in micrometers','Enter number of layers','Experiment time in h','Gas concentration','Background concentration'}; % Creates a pop-up window that asks the user to enter the physical length of the diffusion profile in microns
     dlgtitle = 'Input';
     dims = 1;
-    definput = {'1.0','2','0.083'};
+    definput = {'1.0','2','0.083','0.98','0.02'};
     answer = inputdlg(prompt,dlgtitle,dims,definput);
     Length_um=str2double(answer(1)); % Provides the physical scaling of the fitting data
     Layers=str2double(answer(2)); % Determines for how many layers the optimisation should run
     Duration=str2double(answer(3));% Defines the experiment time
+    C_gas=str2double(answer(4)); % Defines the concentration of O18 in the gas
+    C_bg=str2double(answer(5)); % Defines the background concentration of O18 in the native oxide lattice
     
     [FileName, PathName] = uigetfile('*.*'); % Call a pop-up UI feature that allows the user to select data files
     data=(transpose(textread([PathName,'\',FileName],'%n')')-C_bg)/(C_gas-C_bg); % Reads the data file
@@ -89,7 +89,10 @@ if DeveloperMode == 0
     
 elseif DeveloperMode == 1
     
-    data=load('GenNoiseInt.txt');
+    
+    C_bg = 0.02;
+    C_gas = 0.98;
+    data=(load('GenNoiseInt.txt')-C_bg)/(C_gas-C_bg);
     L(1) = 0.3;
     L(2) = 0.7;
     L(3) = 0;
