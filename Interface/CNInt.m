@@ -65,58 +65,48 @@ elseif Layers == 2 % If there are two layers, fminsearch will call upon the foll
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% Build simulation components
-    % Set up a sub-matrix L which contains the information regarding the surface exchange as well as diffusion through the LSCF layer
-    Layer1 = full(gallery('tridiag',round(L(1)/delta_x),sigma_1,1-2*sigma_1,sigma_1)); % Bulk diffusion parameters
-    Layer1(1,1) = 1-2*sigma_1*(1+delta_x*h); %Surface boundary condition
-    Layer1(1,2) = 2*sigma_1; %Surface boundary condition
-    
-    % Set up a sub-matrix E for the bulk diffusion properties of the electrolyte
-    Layer2 = full(gallery('tridiag',round((L(2)-delta_x)/delta_x)+2,sigma_2,1-2*sigma_2,sigma_2)); %Bulk diffusion parameters
-    Layer2(end,end) = 1+sigma_2; %Mirror boundary condition parameters
-    Layer2(end,end-1) = -2*sigma_2;
-    Layer2(end,end-2) = sigma_2;
-    
-    % Set up the main matrix which combines L, E and interface properties into one
-    A = full(gallery('tridiag',round(steps_x),sigma_2,1-2*sigma_2,sigma_2)); % Create a tridiagonal basis using the electrolyte values
-    A(1:round(L(1)/delta_x),1:round(L(1)/delta_x))=Layer1; %integrate the sub-matrix L into the main matrix
-    A(round((Length-L(2))/delta_x)+1:end,round((Length-L(2))/delta_x)+1:end)=Layer2; %integrate the sub-matrix E into the main matrix
-    
-    %Set up the part of the matrix at the interface with varying width
-    for l=round(L(1)/delta_x):round(L(1)/delta_x)+int_width % Creates a loop which ensures that the tridiagonal matrix at the interface is set up with varying interface width
-        A(l,l-1) = sigma_int;
-        A(l,l) = 1-2*sigma_int;
-        A(l,l+1) = sigma_int;
-    end
-    
-    A(round(L(1)/delta_x)+int_width,round(L(1)/delta_x)+1+int_width) = sigma_2;
-    A(round(L(1)/delta_x)+1+int_width,round(L(1)/delta_x)+int_width) = sigma_int; % Manual modification to ensure the matrix is set up correctly
-    
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
-    %Setting up the transformation matrix for the next timestep A(n+1), which
-    %is just the same as the previous matrix but with flipped signs.
-    
-    Layer1_n = full(gallery('tridiag',round(L(1)/delta_x),-sigma_1,1+2*sigma_1,-sigma_1));
-    Layer1_n(1,1) = 1+2*sigma_1*(1+delta_x*h);
-    Layer1_n(1,2) = -2*sigma_1;
-    
-    Layer2_n = full(gallery('tridiag',round((L(2)-delta_x)/delta_x)+2,-sigma_2,1+2*sigma_2,-sigma_2));
-    Layer2_n(end,end) = 1-sigma_2;
-    Layer2_n(end,end-1) = 2*sigma_2;
-    Layer2_n(end,end-2) = -sigma_2;
-    
-    A_n = full(gallery('tridiag',round(steps_x),-sigma_2,1+2*sigma_2,-sigma_2));
-    A_n(1:round(L(1)/delta_x),1:round(L(1)/delta_x))=Layer1_n;
-    A_n(round((Length-L(2))/delta_x)+1:end,round((Length-L(2))/delta_x)+1:end)=Layer2_n;
-    
-    for l=round(L(1)/delta_x):round((L(1)+int_width)/delta_x)
-        A_n(l,l-1) = -sigma_int;
-        A_n(l,l) = 1+2*sigma_int;
-        A_n(l,l+1) = -sigma_int;
-    end
-    
-    A_n(round(L(1)/delta_x)+int_width,round(L(1)/delta_x)+1+int_width) = -sigma_2;
-    A_n(round(L(1)/delta_x)+1+int_width,round(L(1)/delta_x)+int_width) = -sigma_int;
+    sub = zeros(round(steps_x)-1,1);
+sub(1:L(1)/delta_x-1,1)=sigma_1;
+sub(L(1)/delta_x:L(1)/delta_x+1,1)=sigma_int;
+sub(L(1)/delta_x+1:end,1)=sigma_2;
+
+sup = zeros(round(steps_x)-1,1);
+sup(1:L(1)/delta_x-2,1)=sigma_1;
+sup(L(1)/delta_x-1:L(1)/delta_x,1)=sigma_int;
+sup(L(1)/delta_x+0:end,1)=sigma_2;
+
+s1 = zeros(round(steps_x),1);
+s1(1:L(1)/delta_x-1,1)=1-2*sigma_1;
+s1(L(1)/delta_x:L(1)/delta_x+1,1)=1-2*sigma_int;
+s1(L(1)/delta_x+1:end,1)=1-2*sigma_2;
+
+A = full(gallery('tridiag',sub,s1,sup));
+A(1,1) = 1-2*sigma_1*(1+delta_x*h); %Surface boundary condition
+A(1,2) = 2*sigma_1; %Surface boundary condition
+A(end,end) = 1+sigma_2; %Mirror boundary condition parameters
+A(end,end-1) = -2*sigma_2;
+A(end,end-2) = sigma_2;
+
+A_n = full(gallery('tridiag',-sub,-s1+2,-sup));
+A_n(1,1) = 1+2*sigma_1*(1+delta_x*h); %Surface boundary condition
+A_n(1,2) = -2*sigma_1; %Surface boundary condition
+A_n(end,end) = 1-sigma_2; %Mirror boundary condition parameters
+A_n(end,end-1) = 2*sigma_2;
+A_n(end,end-2) = -sigma_2;
+
+A_Di = full(gallery('tridiag',sub,s1,sup));
+A_Di(1,1) = 1-2*sigma_1*(1+delta_x*h); %Surface boundary condition
+A_Di(1,2) = 2*sigma_1; %Surface boundary condition
+A_Di(end,end) = 1; % Dirichlet boundary condition
+A_Di(end,end-1) = 0;
+A_Di(end,end-2) = 0;
+
+A_n_Di = full(gallery('tridiag',-sub,-s1+2,-sup));
+A_n_Di(1,1) = 1+2*sigma_1*(1+delta_x*h); %Surface boundary condition
+A_n_Di(1,2) = -2*sigma_1; %Surface boundary condition
+A_n_Di(end,end) = 1; %Mirror boundary condition parameters
+A_n_Di(end,end-1) = 0;
+A_n_Di(end,end-2) = 0;
     
 elseif Layers == 3 % Set up a matric calculation with three layers
     

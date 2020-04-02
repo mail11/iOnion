@@ -11,7 +11,7 @@ global Layers;
 global Length_um;
 global L;
 L = [0;0;0];
-DeveloperMode = 1;
+DeveloperMode = 0;
 
 if DeveloperMode == 0
     %% Getting the data file
