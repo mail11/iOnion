@@ -6,10 +6,10 @@ clear;close all
 
 %% Define parameters
 % Material properties
-D_1=4; % Define diffusivity of cathode material [um^2/s] (LSCF)
+D_1=.4; % Define diffusivity of cathode material [um^2/s] (LSCF)
 D_2=4;  % Define diffusivity of electrolyte material [um^2/s] (GDC)
 k=0.0772; % Define surface exchange coefficient of LSCF [um/s]
-D_int=4; %Define interfacial resistance [s/um]
+D_int=.1; %Define interfacial resistance [s/um]
 int_width=0;% Define the width of the interface region (0 is the default value)
 
 % Experimental setup
