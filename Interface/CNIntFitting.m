@@ -96,8 +96,8 @@ elseif DeveloperMode == 1
     C_bg = 0.02;
     C_gas = 0.98;
     data=(load('GenNoiseInt.txt')-C_bg)/(C_gas-C_bg);
-    L(1) = 0.3;
-    L(2) = 0.7;
+    L(1) = 0.2;
+    L(2) = 0.8;
     L(3) = 0;
     Layers = 2;
     Duration = 0.083;

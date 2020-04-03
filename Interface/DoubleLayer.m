@@ -6,18 +6,18 @@ clear;close all
 
 %% Define parameters
 % Material properties
-D_1=.4; % Define diffusivity of cathode material [um^2/s] (LSCF)
-D_2=4;  % Define diffusivity of electrolyte material [um^2/s] (GDC)
-k=0.0772; % Define surface exchange coefficient of LSCF [um/s]
-D_int=.1; %Define interfacial resistance [s/um]
+D_1=.0026638; % Define diffusivity of cathode material [um^2/s] (LSCF)
+D_2=0.05;  % Define diffusivity of electrolyte material [um^2/s] (GDC)
+k=0.000292; % Define surface exchange coefficient of LSCF [um/s]
+D_int=0.02789; %Define interfacial resistance [s/um]
 int_width=0;% Define the width of the interface region (0 is the default value)
 
 % Experimental setup
 Duration=.2; % Time of exchange in hours (found with Kiloran correction)
-L = [20;80]; % Vector of the layer lengths, first element is the first layer
+L = [0.2;0.8]; % Vector of the layer lengths, first element is the first layer
 
 % Simulation parameters
-delta_x=1; % Define the spatial step [um]
+delta_x=0.01; % Define the spatial step [um]
 delta_t=2; % Define the time step [s] (this should be a derived parameter based on max value of sigma)
 
 % Derived properties
@@ -102,16 +102,16 @@ end
 
 hold off
 
-% Optional code to produce noisy data that can be used to test fitting
-% functions
+%Optional code to produce noisy data that can be used to test fitting
+%functions
 
 % snr = 50;
 % out = awgn(C,snr);varargin;
-%
+% 
 % plot(out)
-%
+% 
 % writematrix(out,'GenNoiseInt.txt')
-%
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -137,32 +137,6 @@ hold off
 %     'FontSize',16);
 % legend('C-N Simulation','Interface location', 'Interpreter','Latex');
 
-%
-% Layer1 = full(gallery('tridiag',round(L(1)/delta_x),sigma_1,1-2*sigma_1,sigma_1)); % Bulk diffusion parameters
-% Layer1(1,1) = 1-2*sigma_1*(1+delta_x*h); %Surface boundary condition
-% Layer1(1,2) = 2*sigma_1; %Surface boundary condition
-%
-% % Set up a sub-matrix E for the bulk diffusion properties of the electrolyte
-% Layer2 = full(gallery('tridiag',round((L(2)-delta_x)/delta_x)+2,sigma_2,1-2*sigma_2,sigma_2)); %Bulk diffusion parameters
-% Layer2(end,end) = 1+sigma_2; %Mirror boundary condition parameters
-% Layer2(end,end-1) = -2*sigma_2;
-% Layer2(end,end-2) = sigma_2;
-%
-% % Set up the main matrix which combines L, E and interface properties into one
-% A = full(gallery('tridiag',round(steps_x),sigma_2,1-2*sigma_2,sigma_2)); % Create a tridiagonal basis using the electrolyte values
-% A(1:L(1)/delta_x,1:L(1)/delta_x)=Layer1; %integrate the sub-matrix L into the main matrix
-% A(round((Length-L(2))/delta_x)+1:end,round((Length-L(2))/delta_x)+1:end)=Layer2; %integrate the sub-matrix E into the main matrix
-%
-% % %Set up the part of the matrix at the interface with varying width
-% for l=L(1)/delta_x:L(1)/delta_x+int_width % Creates a loop which ensures that the tridiagonal matrix at the interface is set up with varying interface width
-%     A(l,l-1) = sigma_int;
-%     A(l,l) = 1-2*sigma_int;
-%     A(l,l+1) = sigma_int;
-% end
-%
-%
-% A(L(1)/delta_x+int_width,L(1)/delta_x+1+int_width) = sigma_2;
-% A(L(1)/delta_x+1+int_width,L(1)/delta_x+int_width) = sigma_int; % Manual modification to ensure the matrix is set up correctly
 
 
 % A(L(1)/delta_x,L(1)/delta_x-1)=sigma_1+0.25*(sigma_int-sigma_1);
@@ -178,33 +152,6 @@ hold off
 % A(L(1)/delta_x+2,L(1)/delta_x+3)=sigma_2-0.25*(sigma_2-sigma_int);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%Setting up the transformation matrix for the next timestep A(n+1), which
-%is just the same as the previous matrix but with flipped signs.
-
-% Layer1_n = full(gallery('tridiag',round(L(1)/delta_x),-sigma_1,1+2*sigma_1,-sigma_1));
-% Layer1_n(1,1) = 1+2*sigma_1*(1+delta_x*h);
-% Layer1_n(1,2) = -2*sigma_1;
-%
-% Layer2_n = full(gallery('tridiag',round((L(2)-delta_x)/delta_x)+2,-sigma_2,1+2*sigma_2,-sigma_2));
-% Layer2_n(end,end) = 1-sigma_2;
-% Layer2_n(end,end-1) = 2*sigma_2;
-% Layer2_n(end,end-2) = -sigma_2;
-%
-% A_n = full(gallery('tridiag',round(steps_x),-sigma_2,1+2*sigma_2,-sigma_2));
-% A_n(1:L(1)/delta_x,1:L(1)/delta_x)=Layer1_n;
-% A_n(round((Length-L(2))/delta_x)+1:end,round((Length-L(2))/delta_x)+1:end)=Layer2_n;
-%
-% for l=L(1)/delta_x:(L(1)+int_width)/delta_x
-%     A_n(l,l-1) = -sigma_int;
-%     A_n(l,l) = 1+2*sigma_int;
-%     A_n(l,l+1) = -sigma_int;
-% end
-%
-% A_n(L(1)/delta_x+int_width,L(1)/delta_x+1+int_width) = -sigma_2;
-% A_n(L(1)/delta_x+1+int_width,L(1)/delta_x+int_width) = -sigma_int;
-
-
 
 % A_n(L(1)/delta_x,L(1)/delta_x-1)=-sigma_1+0.25*(sigma_int-sigma_1);
 % A_n(L(1)/delta_x,L(1)/delta_x)=1+2*sigma_1;
