@@ -1,4 +1,4 @@
-function [r0,Dk,data,cn] = CNIntFitting(Duration,data,Length_um,L) 
+function [r0,Dk,data,cn] = CNIntFitting(Duration,data,Length_um,L)
 %% Define global variables
 % This ensures that the following variables are the same across all
 % function files
@@ -72,8 +72,8 @@ if DeveloperMode == 0
         Dk0 = log([0.1,0.1,0.1,0.1,0.1,0.01]); %Initial guesses for D1, D2, D3, DINT1, DINT 2 and k in that order
     end
     
-    options = optimset('MaxIter',2000,'MaxFunEvals',3000, 'TolFun',1e-8,'TolX',1e-8); % set options for fminsearch
-    [Dk, fminres] = fminsearch(fun,Dk0,options); % the actual fminsearch
+    options = optimset('Display','iter','PlotFcns',@optimplotfval,'MaxFunEvals',2000);
+    [Dk, fminres,exitflag,output] = fminsearch(fun,Dk0,options);
     
     % Change the output depending on how many variables are fitted
     
@@ -107,8 +107,8 @@ elseif DeveloperMode == 1
     Dk0 = log([0.1,0.1,0.1,0.1]); %Initial guesses for DLSCF, DGDC, DINT and k in that order
     
     
-    options = optimset('MaxFunEvals',2000, 'TolFun',1e-6,'TolX',1e-6);
-    [Dk, fminres] = fminsearch(fun,Dk0,options);
+    options = optimset('Display','iter','PlotFcns',@optimplotfval,'MaxFunEvals',2000);
+    [Dk, fminres,exitflag,output] = fminsearch(fun,Dk0,options);
     
     
     disp(['DLSCF = ',num2str((10^(Dk(1)))),'  DGDC = ',num2str((10^(Dk(2)))),' DINT = ',num2str((10^(Dk(3)))),' k = ',num2str((10^(Dk(4))))]);

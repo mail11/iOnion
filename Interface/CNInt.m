@@ -90,8 +90,8 @@ elseif Layers == 2 % If there are two layers, fminsearch will call upon the foll
     sub(round(L(1)/delta_x)+1:end,1)=sigma_2;
     
     sup = zeros(round(steps_x)-1,1);
-    sup(1:round(L(1)/delta_x)-2,1)=sigma_1;
-    sup(round(L(1)/delta_x)-1:round(L(1)/delta_x),1)=sigma_int;
+    sup(1:round(L(1)/delta_x)-1,1)=sigma_1;
+    %sup(round(L(1)/delta_x)-1:round(L(1)/delta_x),1)=sigma_int;
     sup((round(L(1)/delta_x))+0:end,1)=sigma_2;
     
     s1 = zeros(round(steps_x),1);
@@ -156,10 +156,10 @@ elseif Layers == 3 % Set up a matric calculation with three layers
     sub(round((L(1)+L(2))/delta_x)+1:end,1)=sigma_3;
     
     sup = zeros(round(steps_x)-1,1);
-    sup(1:round(L(1)/delta_x)-2,1)=sigma_1;
-    sup(round(L(1)/delta_x)-1:round(L(1)/delta_x),1)=sigma_int1;
-    sup(round(L(1)/delta_x):round((L(1)+L(2))/delta_x)-1)=sigma_2;
-    sup(round((L(1)+L(2)/delta_x):round((L(1)+L(2)/delta_x)+1)),1)=sigma_int2;
+    sup(1:round(L(1)/delta_x)-1,1)=sigma_1;
+    %sup(round(L(1)/delta_x)-1:round(L(1)/delta_x),1)=sigma_int1;
+    sup(round(L(1)/delta_x):round((L(1)+L(2))/delta_x)-0)=sigma_2;
+    %sup(round((L(1)+L(2)/delta_x):round((L(1)+L(2)/delta_x)+1)),1)=sigma_int2;
     sup(round((L(1)+L(2)/delta_x)+1):end,1)=sigma_3;
     
     s1 = zeros(round(steps_x),1);
@@ -210,7 +210,8 @@ C_Di = zeros(round(steps_x),1);
 for t=1:steps_t
     
     C = A_n\(A*C+G);
-    %C_Di = A_n_Di\(A_Di*C_Di+G);
+    %C_Di = A_n_Di\(A_Di*C_Di+G); % Calculate Dirichlet boundary condition
+    %if desired
     
 end
 
