@@ -1,0 +1,7 @@
+TripleLayerProfile.txt - Length of profile = 2.4 microns
+DBLayerProfile.txt - Length of profile = 1 micron
+GenNoiseInt.txt - Randomly generated noise so the length shouldn't be relevant
+%%%%%%%%%%%%%%%%%%%%%%
+DoubleLayerMostFunctional - the code that produces the best results
+DoubleLayer_2Node_NoMaths - implementing the interface exactly in the way Dom did in his masters - by changing the diffusivity of the two central nodes in accordance with the series resistor model
+DoubleLayer_2N_WithMaths - same as the previous one, except with additional maths considering variable D added as shown in the LaTex
