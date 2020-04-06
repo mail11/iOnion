@@ -2,6 +2,6 @@ TripleLayerProfile.txt - Length of profile = 2.4 microns
 DBLayerProfile.txt - Length of profile = 1 micron
 GenNoiseInt.txt - Randomly generated noise so the length shouldn't be relevant
 %%%%%%%%%%%%%%%%%%%%%%
-DoubleLayerMostFunctional - the code that produces the best results
+DoubleLayerMostFunctional - the code that produces the best results with the weird node structure that seems illogical - the reason I think this produces the best results is because it produces only a single step across the interface with no datapoints in it, which I think comes closest to what we want to achieve
 DoubleLayer_2Node_NoMaths - implementing the interface exactly in the way Dom did in his masters - by changing the diffusivity of the two central nodes in accordance with the series resistor model
 DoubleLayer_2N_WithMaths - same as the previous one, except with additional maths considering variable D added as shown in the LaTex
