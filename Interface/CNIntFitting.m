@@ -11,7 +11,7 @@ global Layers;
 global Length_um;
 global L;
 L = [0;0;0];
-DeveloperMode = 1;
+DeveloperMode = 0;
 
 if DeveloperMode == 0
     %% Getting the data file
@@ -69,7 +69,7 @@ if DeveloperMode == 0
     elseif    Layers == 2 % Ensures that 4 variables are run in fminsearch
         Dk0 = log([0.009,0.264,0.00100,0.0017]); % Initial guesses for DLSCF, DGDC, DINT and k in that order
     elseif Layers == 3 % Ensures that 6 variables are run
-        Dk0 = log([0.1,0.1,0.1,0.1,0.1,0.01]); %Initial guesses for D1, D2, D3, DINT1, DINT 2 and k in that order
+        Dk0 = log([0.1,0.1,0.1,0.1,1.1,0.01]); %Initial guesses for D1, D2, D3, DINT1, DINT 2 and k in that order
     end
     
     options = optimset('Display','iter','PlotFcns',@optimplotfval,'MaxFunEvals',2000);
@@ -81,11 +81,11 @@ if DeveloperMode == 0
         disp(['D1 = ',num2str((10^(Dk(1)))),' k = ',num2str((10^(Dk(2))))]);
     elseif Layers == 2
         disp(['D1 = ',num2str((10^(Dk(1)))),'  D2 = ',num2str((10^(Dk(2)))),' DINT = ',num2str((10^(Dk(3)))),' k = ',num2str((10^(Dk(4))))]); % display the output variables
-        r = (2/10^Dk(3)-1/10^Dk(1)-1/10^Dk(2))*delta_x
+        r = (2/10^Dk(3)-1/10^Dk(1)-1/10^Dk(2))*delta_x/2
     elseif Layers == 3
         disp(['D1 = ',num2str((10^(Dk(1)))),'  D2 = ',num2str((10^(Dk(2)))),' D3 = ',num2str((10^(Dk(3)))),' DINT1 = ',num2str((10^(Dk(4)))),' DINT2 = ',num2str((10^(Dk(5)))),' k = ',num2str((10^(Dk(6))))]); % display the output variables
-        r1 = (2/10^Dk(4)-1/10^Dk(1)-1/10^Dk(2))*delta_x
-        r2 = (2/10^Dk(5)-1/10^Dk(2)-1/10^Dk(3))*delta_x
+        r1 = (2/10^Dk(4)-1/10^Dk(1)-1/10^Dk(2))*delta_x/2
+        r2 = (2/10^Dk(5)-1/10^Dk(2)-1/10^Dk(3))*delta_x/2
     end
     
     writematrix(Dk,'FittedValues.xlsx') % Write the values out onto an Excel file which can then be further processed
@@ -104,7 +104,7 @@ elseif DeveloperMode == 1
     
     fun = @(Dk) sum((data-CNInt(Dk)).^2);
     
-    Dk0 = log([0.1,0.1,0.1,0.1]); %Initial guesses for DLSCF, DGDC, DINT and k in that order
+    Dk0 = log([0.01,0.1,0.01,0.01]); %Initial guesses for DLSCF, DGDC, DINT and k in that order
     
     
     options = optimset('Display','iter','PlotFcns',@optimplotfval,'MaxFunEvals',2000);
@@ -112,7 +112,7 @@ elseif DeveloperMode == 1
     
     
     disp(['DLSCF = ',num2str((10^(Dk(1)))),'  DGDC = ',num2str((10^(Dk(2)))),' DINT = ',num2str((10^(Dk(3)))),' k = ',num2str((10^(Dk(4))))]);
-    r = (2/10^Dk(3)-1/10^Dk(1)-1/10^Dk(2))*delta_x
+    r = (2/10^Dk(3)-1/10^Dk(1)-1/10^Dk(2))*delta_x/2
 end
 %% plotting
 

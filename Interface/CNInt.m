@@ -20,7 +20,7 @@ if Layers == 1
     
     %% One layer
     
-    Length=L(1); % Total sample length [um]
+    Length=sum(L); % Total sample length [um]
     delta_x=Length/(length(data)-1); % Define the spatial step [um]
     steps_x=Length/delta_x+1; % Define number of spatial nodes
     steps_t=Duration*3600/delta_t+1; % Define number of time steps
@@ -72,7 +72,7 @@ elseif Layers == 2 % If there are two layers, fminsearch will call upon the foll
     
     % Derived properties
     %D_int=2*(r/delta_x+1/D_LSCF+1/D_GDC)^-1; % Define the diffusivity of the interface [um^2/s]
-    Length=L(1)+L(2); % Total sample length [um]
+    Length=sum(L); % Total sample length [um]
     delta_x=Length/(length(data)-1); % Define the spatial step [um]
     steps_x=Length/delta_x+1; % Define number of spatial nodes
     steps_t=Duration*3600/delta_t+1; % Define number of time steps
@@ -84,21 +84,32 @@ elseif Layers == 2 % If there are two layers, fminsearch will call upon the foll
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% Build simulation components
+    % Set up the vector for the subdiagonal
     sub = zeros(round(steps_x)-1,1);
     sub(1:round(L(1)/delta_x)-1,1)=sigma_1;
     sub(round(L(1)/delta_x):round(L(1)/delta_x)+1,1)=sigma_int;
     sub(round(L(1)/delta_x)+1:end,1)=sigma_2;
     
+    % Set up the vector for the superdiagonal
     sup = zeros(round(steps_x)-1,1);
     sup(1:round(L(1)/delta_x)-1,1)=sigma_1;
-    %sup(round(L(1)/delta_x)-1:round(L(1)/delta_x),1)=sigma_int;
-    sup((round(L(1)/delta_x))+0:end,1)=sigma_2;
+    sup(round(L(1)/delta_x)-0:round(L(1)/delta_x),1)=sigma_int;
+    sup(round(L(1)/delta_x)+1:end,1)=sigma_2;
     
+    % Set up the vector for the central diagonal
     s1 = zeros(round(steps_x),1);
     s1(1:round(L(1)/delta_x)-1,1)=1-2*sigma_1;
-    s1(round(L(1)/delta_x):round(L(1)/delta_x)+1,1)=1-2*sigma_int;
-    s1(round(L(1)/delta_x)+1:end,1)=1-2*sigma_2;
+    s1(round(L(1)/delta_x),1)=1-(sigma_int+sigma_1);
+    s1(round(L(1)/delta_x)+1,1)=1-(sigma_int+sigma_2);
+    s1(round(L(1)/delta_x)+2:end,1)=1-2*sigma_2;
     
+    s1_n = zeros(round(steps_x),1);
+    s1_n(1:round(L(1)/delta_x)-1,1)=1+2*sigma_1;
+    s1_n(round(L(1)/delta_x),1)=1+(sigma_int+sigma_1);
+    s1_n(round(L(1)/delta_x)+1,1)=1+(sigma_int+sigma_2);
+    s1_n(round(L(1)/delta_x)+2:end,1)=1+2*sigma_2;
+    
+    % Create the matrix at the current timestep (Mirror boundary condition)
     A = full(gallery('tridiag',sub,s1,sup));
     A(1,1) = 1-2*sigma_1*(1+delta_x*h); %Surface boundary condition
     A(1,2) = 2*sigma_1; %Surface boundary condition
@@ -106,13 +117,15 @@ elseif Layers == 2 % If there are two layers, fminsearch will call upon the foll
     A(end,end-1) = -2*sigma_2;
     A(end,end-2) = sigma_2;
     
-    A_n = full(gallery('tridiag',-sub,-s1+2,-sup));
+    % Create the matrix at the future timestep
+    A_n = full(gallery('tridiag',-sub,s1_n,-sup));
     A_n(1,1) = 1+2*sigma_1*(1+delta_x*h); %Surface boundary condition
     A_n(1,2) = -2*sigma_1; %Surface boundary condition
     A_n(end,end) = 1-sigma_2; %Mirror boundary condition parameters
     A_n(end,end-1) = 2*sigma_2;
     A_n(end,end-2) = -sigma_2;
     
+    % Create the matrix at the current timestep (Dirichlet boundary condition)
     A_Di = full(gallery('tridiag',sub,s1,sup));
     A_Di(1,1) = 1-2*sigma_1*(1+delta_x*h); %Surface boundary condition
     A_Di(1,2) = 2*sigma_1; %Surface boundary condition
@@ -133,7 +146,7 @@ elseif Layers == 3 % Set up a matric calculation with three layers
     
     % Derived properties
     %D_int=2*(r/delta_x+1/(10^(Dk(1)))+1/(10^(Dk(2))))^-1; % Define the diffusivity of the interface [um^2/s]
-    Length=L(1)+L(2)+L(3); % Total sample length [um]
+    Length=sum(L); % Total sample length [um]
     delta_x=Length/(length(data)-1);
     steps_x=Length/delta_x+1; % Define number of spatial nodes
     steps_t=Duration*3600/delta_t+1; % Define number of time steps
@@ -148,41 +161,60 @@ elseif Layers == 3 % Set up a matric calculation with three layers
     
     %% Build simulation components
     % Set up a sub-matrix L which contains the information regarding the surface exchange as well as diffusion through the LSCF layer
+    % Set up the vector for the subdiagonal
+    % Set up the vector for the subdiagonal
     sub = zeros(round(steps_x)-1,1);
     sub(1:round(L(1)/delta_x)-1,1)=sigma_1;
-    sub(round(L(1)/delta_x):round(L(1)/delta_x)+1,1)=sigma_int1;
-    sub(round(L(1)/delta_x)+1:round((L(1)+L(2))/delta_x)-1,1)=sigma_2;
-    sub(round((L(1)+L(2))/delta_x):round((L(1)+L(2))/delta_x)+1,1)=sigma_int2;
-    sub(round((L(1)+L(2))/delta_x)+1:end,1)=sigma_3;
+    sub(round(L(1)/delta_x),1)=sigma_int1;
+    sub(round(L(1)/delta_x)+1:round((L(1)+L(2))/delta_x-1),1)=sigma_2;
+    sub(round((L(1)+L(2))/delta_x),1)=sigma_int2;
+    sub(round((L(1)+L(2))/delta_x+1):end,1)=sigma_3;
     
+    % Set up the vector for the superdiagonal
     sup = zeros(round(steps_x)-1,1);
-    sup(1:round(L(1)/delta_x)-1,1)=sigma_1;
-    %sup(round(L(1)/delta_x)-1:round(L(1)/delta_x),1)=sigma_int1;
-    sup(round(L(1)/delta_x):round((L(1)+L(2))/delta_x)-0)=sigma_2;
-    %sup(round((L(1)+L(2)/delta_x):round((L(1)+L(2)/delta_x)+1)),1)=sigma_int2;
-    sup(round((L(1)+L(2)/delta_x)+1):end,1)=sigma_3;
+    sup(1:round(L(1)/delta_x),1)=sigma_1;
+    sup(round(L(1)/delta_x),1)=sigma_int1;
+    sup(round(L(1)/delta_x)+1:round((L(1)+L(2))/delta_x),1)=sigma_2;
+    sup(round((L(1)+L(2))/delta_x),1)=sigma_int2;
+    sup(round((L(1)+L(2))/delta_x)+1:end,1)=sigma_3;
     
+    % Set up the vector for the central diagonal
     s1 = zeros(round(steps_x),1);
     s1(1:round(L(1)/delta_x)-1,1)=1-2*sigma_1;
-    s1(round(L(1)/delta_x):round(L(1)/delta_x)+1,1)=1-2*sigma_int1;
-    s1(round(L(1)/delta_x)+1:round((L(1)+L(2))/delta_x)-1,1)=1-2*sigma_2;
-    s1(round((L(1)+L(2))/delta_x):round((L(1)+L(2))/delta_x)+1,1)=1-2*sigma_int2;
-    s1(round((L(1)+L(2))/delta_x)+1:end,1)=1-2*sigma_3;
+    s1(round(L(1)/delta_x),1)=1-(sigma_int1+sigma_1);
+    s1(round(L(1)/delta_x)+1,1)=1-(sigma_int1+sigma_2);
+    s1(round(L(1)/delta_x)+2:round((L(1)+L(2))/delta_x)-1,1)=1-2*sigma_2;
+    s1(round((L(1)+L(2))/delta_x),1)=1-(sigma_2+sigma_int2);
+    s1(round((L(1)+L(2))/delta_x)+1,1)=1-(sigma_3+sigma_int2);
+    s1(round((L(1)+L(2))/delta_x)+2:end,1)=1-2*sigma_3;
     
+    
+    s1_n = zeros(round(steps_x),1);
+    s1_n(1:round(L(1)/delta_x)-1,1)=1+2*sigma_1;
+    s1_n(round(L(1)/delta_x),1)=1+(sigma_int1+sigma_1);
+    s1_n(round(L(1)/delta_x)+1,1)=1+(sigma_int1+sigma_2);
+    s1_n(round(L(1)/delta_x)+2:round((L(1)+L(2))/delta_x)-1,1)=1+2*sigma_2;
+    s1_n(round((L(1)+L(2))/delta_x),1)=1+(sigma_2+sigma_int2);
+    s1_n(round((L(1)+L(2))/delta_x)+1,1)=1+(sigma_3+sigma_int2);
+    s1_n(round((L(1)+L(2))/delta_x)+2:end,1)=1+2*sigma_3;
+    
+    % Create the matrix at the current timestep (Mirror boundary condition)
     A = full(gallery('tridiag',sub,s1,sup));
     A(1,1) = 1-2*sigma_1*(1+delta_x*h); %Surface boundary condition
     A(1,2) = 2*sigma_1; %Surface boundary condition
-    A(end,end) = 1+sigma_2; %Mirror boundary condition parameters
-    A(end,end-1) = -2*sigma_2;
-    A(end,end-2) = sigma_2;
+    A(end,end) = 1+sigma_3; %Mirror boundary condition parameters
+    A(end,end-1) = -2*sigma_3;
+    A(end,end-2) = sigma_3;
     
-    A_n = full(gallery('tridiag',-sub,-s1+2,-sup));
+    % Create the matrix at the future timestep
+    A_n = full(gallery('tridiag',-sub,s1_n,-sup));
     A_n(1,1) = 1+2*sigma_1*(1+delta_x*h); %Surface boundary condition
     A_n(1,2) = -2*sigma_1; %Surface boundary condition
-    A_n(end,end) = 1-sigma_2; %Mirror boundary condition parameters
-    A_n(end,end-1) = 2*sigma_2;
-    A_n(end,end-2) = -sigma_2;
+    A_n(end,end) = 1-sigma_3; %Mirror boundary condition parameters
+    A_n(end,end-1) = 2*sigma_3;
+    A_n(end,end-2) = -sigma_3;
     
+    %Create the matrix at the current timestep (Dirichlet boundary condition)
     A_Di = full(gallery('tridiag',sub,s1,sup));
     A_Di(1,1) = 1-2*sigma_1*(1+delta_x*h); %Surface boundary condition
     A_Di(1,2) = 2*sigma_1; %Surface boundary condition
@@ -210,10 +242,10 @@ C_Di = zeros(round(steps_x),1);
 for t=1:steps_t
     
     C = A_n\(A*C+G);
-    %C_Di = A_n_Di\(A_Di*C_Di+G); % Calculate Dirichlet boundary condition
+    C_Di = A_n_Di\(A_Di*C_Di+G); % Calculate Dirichlet boundary condition
     %if desired
     
 end
 
-%C = (C+C_Di)/2;
+C = (C+C_Di)/2;
 end
