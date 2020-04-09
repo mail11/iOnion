@@ -88,7 +88,7 @@ if DeveloperMode == 0
         r2 = (2/10^Dk(5)-1/10^Dk(2)-1/10^Dk(3))*delta_x/2
     end
     
-    writematrix(Dk,'FittedValues.xlsx') % Write the values out onto an Excel file which can then be further processed
+    writematrix(10^Dk,'FittedValues.xlsx') % Write the values out onto an Excel file which can then be further processed
     
 elseif DeveloperMode == 1
     
