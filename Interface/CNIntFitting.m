@@ -62,6 +62,40 @@ if DeveloperMode == 0
     
     %% Setting up and running fminsearch
     
+    Fit_Start_idx=1;
+    Fit_End_idx=length(L(1));
+    depth=(0:round(L(1)/delta_x)-1);
+    
+    funtest = @(p) sum((data(Fit_Start_idx:Fit_End_idx) - (C_bg+(C_gas-C_bg)*...
+        (erfc(depth./(2*sqrt(abs(p(1))*Duration)))-...
+        exp(abs(p(2)/p(1)).*depth+abs(p(1))*Duration*abs(p(2)/p(1))^2)...
+        .*erfc(...
+        depth./(2*sqrt(abs(p(1))*Duration))...
+        +abs(p(2)/p(1))*sqrt(abs(p(1))*Duration)))...
+        )).^2);
+    
+    pguess = [10,0.1]; % Guess D and k
+    
+    options = optimset('Display','iter','PlotFcns',@optimplotfval,'MaxFunEvals',2000,'TolFun',1e-4,'TolX',1e-4);
+    [p,fminres] = fminsearch(funtest,pguess,options);
+    
+    Crank=(C_bg+(C_gas-C_bg)*...
+        (erfc(depth./(2*sqrt(abs(p(1))*Duration)))-...
+        exp(abs(p(2)/p(1)).*depth+abs(p(1))*Duration*abs(p(2)/p(1))^2)...
+        .*erfc(...
+        depth./(2*sqrt(abs(p(1))*Duration))...
+        +abs(p(2)/p(1))*sqrt(abs(p(1))*Duration))));
+    
+    plot(depth,data(1:round(L(1)/delta_x)),depth,Crank)
+    legend('Data','Fit')
+    xlabel('Depth / um')
+    ylabel('Isotopic Fraction')
+    
+    
+    disp(['D = ',num2str(p(1)),'  and   k = ',num2str(p(2))]);
+    
+    
+    
     fun = @(Dk) sum((data-CNInt(Dk)).^2); % set up the sum squared function
     
     if Layers == 1 % Condition for a single material
@@ -88,7 +122,7 @@ if DeveloperMode == 0
         r2 = (2/10^Dk(5)-1/10^Dk(2)-1/10^Dk(3))*delta_x/2
     end
     
-   % writematrix(10^Dk,'FittedValues.xlsx') % Write the values out onto an Excel file which can then be further processed
+    % writematrix(10^Dk,'FittedValues.xlsx') % Write the values out onto an Excel file which can then be further processed
     
 elseif DeveloperMode == 1
     
