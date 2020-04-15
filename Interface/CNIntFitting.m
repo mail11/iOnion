@@ -19,7 +19,7 @@ if DeveloperMode == 0
     prompt = {'Enter length of the profile in micrometers','Enter number of layers','Experiment time in h','Gas concentration','Background concentration'}; % Creates a pop-up window that asks the user to enter the physical length of the diffusion profile in microns
     dlgtitle = 'Input';
     dims = 1;
-    definput = {'1.0','2','0.083','0.98','0.02'};
+    definput = {'2.4','3','0.083','0.954','0.002'};
     answer = inputdlg(prompt,dlgtitle,dims,definput);
     Length_um=str2double(answer(1)); % Provides the physical scaling of the fitting data
     Layers=str2double(answer(2)); % Determines for how many layers the optimisation should run
@@ -69,10 +69,10 @@ if DeveloperMode == 0
     elseif    Layers == 2 % Ensures that 4 variables are run in fminsearch
         Dk0 = log([0.009,0.264,0.00100,0.0017]); % Initial guesses for DLSCF, DGDC, DINT and k in that order
     elseif Layers == 3 % Ensures that 6 variables are run
-        Dk0 = log([0.1,0.1,0.1,0.1,1.1,0.01]); %Initial guesses for D1, D2, D3, DINT1, DINT 2 and k in that order
+        Dk0 = log([0.1,0.1,0.1,0.1,0.1,0.1]); %Initial guesses for D1, D2, D3, DINT1, DINT 2 and k in that order
     end
     
-    options = optimset('Display','iter','PlotFcns',@optimplotfval,'MaxFunEvals',2000);
+    options = optimset('Display','iter','PlotFcns',@optimplotfval,'MaxFunEvals',2000,'TolFun',1e-4,'TolX',1e-4);
     [Dk, fminres,exitflag,output] = fminsearch(fun,Dk0,options);
     
     % Change the output depending on how many variables are fitted
@@ -88,7 +88,7 @@ if DeveloperMode == 0
         r2 = (2/10^Dk(5)-1/10^Dk(2)-1/10^Dk(3))*delta_x/2
     end
     
-    writematrix(10^Dk,'FittedValues.xlsx') % Write the values out onto an Excel file which can then be further processed
+   % writematrix(10^Dk,'FittedValues.xlsx') % Write the values out onto an Excel file which can then be further processed
     
 elseif DeveloperMode == 1
     
@@ -107,7 +107,7 @@ elseif DeveloperMode == 1
     Dk0 = log([0.01,0.1,0.01,0.01]); %Initial guesses for DLSCF, DGDC, DINT and k in that order
     
     
-    options = optimset('Display','iter','PlotFcns',@optimplotfval,'MaxFunEvals',2000);
+    options = optimset('Display','iter','PlotFcns',@optimplotfval,'MaxFunEvals',2000,'TolFun',1e-6,'TolX',1e-6);
     [Dk, fminres,exitflag,output] = fminsearch(fun,Dk0,options);
     
     
