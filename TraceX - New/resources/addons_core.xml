@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<addonCore>
+
+  <label>TraceX</label>
+
+  <version>1.065</version>
+
+  <type>app</type>
+
+  <packagedBy>(R2015b)</packagedBy>
+
+  <identifier>c277fbd0-0946-4b7f-abf1-d1eecfe5dbf7</identifier>
+
+  <summary>Diffusion profile fitting application</summary>
+
+  <createdBy company="Imperial College London" email="sjc08@ic.ac.uk" name="Sam Cooper"/>
+
+  <image>resources/screenshot.png</image>
+
+  <icons>
+    <icon tag="0">resources/icon_48.png</icon>
+    <icon tag="1">resources/icon_24.png</icon>
+    <icon tag="2">resources/icon_16.png</icon>
+  </icons>
+
+</addonCore>

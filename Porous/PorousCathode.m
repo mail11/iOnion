@@ -11,13 +11,13 @@ clear;close all
 D_1=0.000138; % Define diffusivity of cathode material [um^2/s] (LSCF)
 D_2=0.000138;  % Define diffusivity of electrolyte material [um^2/s] (GDC)
 %for i = 1:10; k=0.00000292*i; % Define surface exchange coefficient of LSCF [um/s]
-k = 0.001;
-r = 1000000;%Define interfacial resistance [s/um]
+k = 0.0001;
+r = 1000; %Define interfacial resistance [s/um]
 int_width=0;% Define the width of the interface region (0 is the default value)
 
 % Experimental setup
 Duration=.2; % Time of exchange in hours (found with Kiloran correction)
-L = [0.5;0.5]; % Vector of the layer lengths, first element is the first layer
+L = [0.2;0.8]; % Vector of the layer lengths, first element is the first layer
 
 % Simulation parameters
 delta_x=0.01; % Define the spatial step [um]
@@ -98,7 +98,7 @@ A_n_Di(end,end-2) = 0;
 
 % Define surface exchange vector
 G = zeros(round(steps_x), 1);
-G(1) = 4*delta_x*sigma_1*h; %surface boundary condition vector G
+G(1:L(1)/delta_x) = 4*delta_x*sigma_1*h; %surface boundary condition vector G
 C = zeros(round(steps_x),1);%Initial position vector, 0 everywhere
 C_Di = zeros(round(steps_x),1);% Initial position vector for the Dirichlet bc
 

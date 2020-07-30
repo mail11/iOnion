@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<compatibility>
+
+  <requiredProducts>
+    <requiredProduct identifier="1" name="MATLAB" version="8.6"/>
+    <requiredProduct identifier="17" name="Image Processing Toolbox" version="9.3"/>
+  </requiredProducts>
+
+  <platformCompatibility linux="1" macos="1" matlabonline="1" windows="1"/>
+
+</compatibility>

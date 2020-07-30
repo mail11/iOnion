@@ -6,12 +6,12 @@ clear;close all
 
 %% Define parameters
 % Material properties
-D_1=.0026; % Define diffusivity of cathode material [um^2/s] (LSCF)
-D_2=0.026;
-D_3=0.046;% Define diffusivity of electrolyte material [um^2/s] (GDC)
-k=0.000292; % Define surface exchange coefficient of LSCF [um/s]
-D_int1=.00026; 
-D_int2=0.026;%Define interfacial resistance [s/um]
+D_1=0.00311; % Define diffusivity of cathode material [um^2/s] (LSCF)
+D_2=0.004;
+for i = 1:1:10; D_3=0.0417*i;% Define diffusivity of electrolyte material [um^2/s] (GDC)
+k=0.000268; % Define surface exchange coefficient of LSCF [um/s]
+r1 = 118;
+r2 = 1.36; %Define interfacial resistance [s/um]
 int_width=0;% Define the width of the interface region (0 is the default value)
 
 % Experimental setup
@@ -23,7 +23,8 @@ delta_x=0.01; % Define the spatial step [um]
 delta_t=2; % Define the time step [s] (this should be a derived parameter based on max value of sigma)
 
 % Derived properties
-%D_int=2*(r/delta_x+1/D_1+1/D_2)^-1; % Define the diffusivity of the interface [um^2/s]
+D_int1=2/(2*r1/delta_x+1/D_1+1/D_2); 
+D_int2=2/(2*r2/delta_x+1/D_2+1/D_3);
 Length=sum(L); % Total sample length [um]
 steps_x=Length/delta_x+1; % Define number of spatial nodes
 steps_t=Duration*3600/delta_t+1; % Define number of time steps
@@ -119,15 +120,19 @@ C_Di = zeros(round(steps_x),1);% Initial position vector for the Dirichlet bc
 for t=1:steps_t
     C = A_n\(A*C+G);
     C_Di = A_n_Di\(A_Di*C_Di+G);
-    plot(x,C_Di,x,C,x,(C+C_Di)/2); % Plot both boundary conditions as well as their mean
+    
+end
+
+plot(x,(C+C_Di)/2); % Plot both boundary conditions as well as their mean
     xlim([0 Length])
     ylim([-0 inf]);
     xlabel('Distance, x / microns')
     ylabel('Concentration, C')
-    drawnow
-end
+    %drawnow
 
-hold off
+hold on
+
+end
 
 %Optional code to produce noisy data that can be used to test fitting
 %functions

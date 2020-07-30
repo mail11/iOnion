@@ -8,19 +8,21 @@ clear;close all
 
 %% Define parameters
 % Material properties
-D_1=0.000138; % Define diffusivity of cathode material [um^2/s] (LSCF)
-D_2=0.000138;  % Define diffusivity of electrolyte material [um^2/s] (GDC)
-%for i = 1:10; k=0.00000292*i; % Define surface exchange coefficient of LSCF [um/s]
-k = 0.001;
-r = 1000000;%Define interfacial resistance [s/um]
+D_1=0.0000138; % Define diffusivity of cathode material [um^2/s] (LSCF)
+D_2=0.0000138;  % Define diffusivity of electrolyte material [um^2/s] (GDC)
+k = 0.0001;
+for i = 1:25; r=2^i;
+%r = 0; %Define interfacial resistance [s/um]
 int_width=0;% Define the width of the interface region (0 is the default value)
 
 % Experimental setup
-Duration=.2; % Time of exchange in hours (found with Kiloran correction)
+
+%for i = 0:15; Duration=i*0.5;
+Duration=1.5; % Time of exchange in hours (found with Kiloran correction)
 L = [0.5;0.5]; % Vector of the layer lengths, first element is the first layer
 
 % Simulation parameters
-delta_x=0.01; % Define the spatial step [um]
+delta_x=0.005; % Define the spatial step [um]
 delta_t=2; % Define the time step [s] (this should be a derived parameter based on max value of sigma)
 
 D_int=2/(2*r/delta_x+1/D_1+1/D_2); 
@@ -65,56 +67,41 @@ s1_n(round(L(1)/delta_x)+2:end,1)=1+2*sigma_2;
 
 % Create the matrix at the current timestep (Mirror boundary condition)
 A = full(gallery('tridiag',sub,s1,sup));
-A(1,1) = 1-2*sigma_1*(1+delta_x*h); %Surface boundary condition
-A(1,2) = 2*sigma_1; %Surface boundary condition
-A(end,end) = 1+sigma_2; %Mirror boundary condition parameters
+A(1,1) = sigma_2;
+A(1,2) = -2*sigma_2;
+A(1,3) = 1+sigma_2; % Left mirror boundary condition parameters
+A(end,end) = 1+sigma_2; % Right mirror boundary condition parameters
 A(end,end-1) = -2*sigma_2;
 A(end,end-2) = sigma_2;
 
 % Create the matrix at the future timestep
 A_n = full(gallery('tridiag',-sub,s1_n,-sup));
-A_n(1,1) = 1+2*sigma_1*(1+delta_x*h); %Surface boundary condition
-A_n(1,2) = -2*sigma_1; %Surface boundary condition
+A_n(1,1) = -sigma_2;
+A_n(1,2) = 2*sigma_2;
+A_n(1,3) = 1-sigma_2; 
 A_n(end,end) = 1-sigma_2; %Mirror boundary condition parameters
 A_n(end,end-1) = 2*sigma_2;
 A_n(end,end-2) = -sigma_2;
 
-% Create the matrix at the current timestep (Dirichlet boundary condition)
-A_Di = full(gallery('tridiag',sub,s1,sup));
-A_Di(1,1) = 1-2*sigma_1*(1+delta_x*h); %Surface boundary condition
-A_Di(1,2) = 2*sigma_1; %Surface boundary condition
-A_Di(end,end) = 1; % Dirichlet boundary condition
-A_Di(end,end-1) = 0;
-A_Di(end,end-2) = 0;
-
-A_n_Di = full(gallery('tridiag',-sub,-s1+2,-sup));
-A_n_Di(1,1) = 1+2*sigma_1*(1+delta_x*h); %Surface boundary condition
-A_n_Di(1,2) = -2*sigma_1; %Surface boundary condition
-A_n_Di(end,end) = 1; %Mirror boundary condition parameters
-A_n_Di(end,end-1) = 0;
-A_n_Di(end,end-2) = 0;
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Define surface exchange vector
-G = zeros(round(steps_x), 1);
-G(1) = 4*delta_x*sigma_1*h; %surface boundary condition vector G
 C = zeros(round(steps_x),1);%Initial position vector, 0 everywhere
-C_Di = zeros(round(steps_x),1);% Initial position vector for the Dirichlet bc
+C(1:L(1)/delta_x) = 1;
+%C_Di = zeros(round(steps_x),1);% Initial position vector for the Dirichlet bc
 
 
 %% Run the iterative matrix calculation
 
 
 for t=1:steps_t
-    C = A_n\(A*C+G);
-    C_Di = A_n_Di\(A_Di*C_Di+G);
+    C = A_n\(A*C);
+    %C_Di = A_n_Di\(A_Di*C_Di+G);
     %drawnow
 end
 
 
 %plot(x,C_Di,x,C,x,(C+C_Di)/2); % Plot both boundary conditions as well as their mean
-plot(x,(C+C_Di)/2,'Marker','none','LineWidth',1,'Color','[0.65 0.66 0.89]') % Plot only the mean
+plot(x,C,'Marker','none','LineWidth',1,'Color','[0.65 0.66 0.89]') % Plot only the mean
 xlim([0 Length])
 ylim([-0 inf]);
 set(gca,'XTick',(0:Length/10:Length))
@@ -130,7 +117,7 @@ ylabel('Isotopic Fraction, {\it C}')
 % %hold on
 % semilogy(0.5*delta_x+x(1,L(1)/delta_x+1:100),10^-12*(sub(L(1)/delta_x+1:100)*2*delta_x^2)/delta_t,'LineStyle','-','LineWidth',1.5,'Color','[0.733 0.52 0.67]','Marker','none','MarkerFaceColor','[0.733 0.52 0.67]','MarkerEdgeColor','[0.733 0.52 0.67]','MarkerSize',4);
 
-ylabel ('Tracer Diffusion Coefficient {\it D*}/m^2/s','Color','k')
+%ylabel ('Tracer Diffusion Coefficient {\it D*}/m^2/s','Color','k')
 set(gca,'ycolor','k')
 %set(gca,'YTick',[])
 %set(gca,'YTickLabel')
@@ -147,9 +134,9 @@ hold on
 % line([L(1),L(1)+L(2)],[y,y],'LineWidth',1.5,'Color','[0.733 0.52 0.67]')
 
 
-legend('Simulated Profile','D*','Interface')
+%legend('Simulated Profile','D*','Interface')
 
-%end
+end
 
 %r = (2/D_int-1/D_1-1/D_2)*delta_x/2
 
@@ -171,24 +158,3 @@ legend('Simulated Profile','D*','Interface')
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Initialise figure
-% Fig=figure(...
-%     'Units','normalized',...
-%     'Position',[.3 .5 .5 .4],...
-%     'Color',[1 1 1],...%    'renderer','painters',...
-%     'WindowStyle','normal',...
-%     'PaperPositionMode','auto',...
-%     'PaperOrientation','landscape');
-% h=plot(x,C,x,C_Di,x,C_t,'x-',[L(1),L(1)],[0,1],'k:','linewidth',1.5);
-% set(gca,'TickLabelInterpreter','latex',...
-%     'LineWidth',1.2,...
-%     'FontSize',16);
-% xlim([0 Length])
-% ylim([0 1]); %inf is quite annoying to watch :-)
-% xlabel('Distance, $x$ / microns','interpreter','latex')
-% ylabel('Normalised isotopic fraction, $C''$','interpreter','latex')
-% linkdata on %This updates the data in the plot
-% set(gca,'TickLabelInterpreter','latex',...
-%     'LineWidth',1.2,...
-%     'FontSize',16);
-% legend('C-N Simulation','Interface location', 'Interpreter','Latex');

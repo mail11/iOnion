@@ -10,12 +10,13 @@ global delta_x;
 global steps_x;
 global Duration;
 global Layers;
+global C_gas;
 
 int_width=0;% Define the width of the interface region (0 is the default value)
 
 % Simulation parameters
-delta_t=2; % Define the time step [s] (this should be a derived parameter based on max value of sigma)
-
+%delta_t=(100*2*delta_x^2)/0.01; % Define the time step [s] (this should be a derived parameter based on max value of sigma)
+delta_t = 1;
 if Layers == 1
     
     %% One layer
@@ -75,7 +76,7 @@ elseif Layers == 2 % If there are two layers, fminsearch will call upon the foll
     Length=sum(L); % Total sample length [um]
     delta_x=Length/(length(data)-1); % Define the spatial step [um]
     steps_x=Length/delta_x+1; % Define number of spatial nodes
-    steps_t=Duration*3600/delta_t+1; % Define number of time steps
+    steps_t=round(Duration*3600/delta_t)+1; % Define number of time steps
     x=0:delta_x:Length; % Define the length of the profile in steps of delta_x
     sigma_1=(10^(Dk(1)))*(delta_t)/(2*delta_x^2); % Calculate sigma of LSCF
     sigma_2=(10^(Dk(2)))*(delta_t)/(2*delta_x^2); % Calculate sigma of GDC
@@ -232,7 +233,7 @@ end
 
 % Define surface exchange vector
 G = zeros(round(steps_x), 1);
-G(1) = 4*delta_x*sigma_1*h; %surface boundary condition vector G
+G(1) = 4*delta_x*sigma_1*h*C_gas; %surface boundary condition vector G
 
 C = zeros(round(steps_x),1);%Initial position vector, 0 everywhere
 C_Di = zeros(round(steps_x),1);
@@ -244,7 +245,6 @@ for t=1:steps_t
     C = A_n\(A*C+G);
     C_Di = A_n_Di\(A_Di*C_Di+G); % Calculate Dirichlet boundary condition
     %if desired
-    
 end
 
 C = (C+C_Di)/2;
