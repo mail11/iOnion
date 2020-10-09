@@ -8,11 +8,11 @@ clear;close all
 
 %% Define parameters
 % Material properties
-D_1=0.00026; % Define diffusivity of cathode material [um^2/s] (LSCF)
-D_2=0.00026;  % Define diffusivity of electrolyte material [um^2/s] (GDC)
-k=0.000892; % Define surface exchange coefficient of LSCF [um/s]
+D_1=4.58*1e-3; % Define diffusivity of cathode material [um^2/s] (LSCF)
+D_2=2.61*1e-1;  % Define diffusivity of electrolyte material [um^2/s] (GDC)
+k=6.05*1e-2; % Define surface exchange coefficient of LSCF [um/s]
 
-for i = 1:21; r=2^i;
+for i = 1:11; r=2^i;
 
     %r = 10000000; %Define interfacial resistance [s/um]
 
@@ -21,10 +21,10 @@ int_width=0;% Define the width of the interface region (0 is the default value)
 
 % Experimental setup
 Duration=.00965; % Time of exchange in hours (found with Kiloran correction)
-L = [0.2;0.8]; % Vector of the layer lengths, first element is the first layer
+L = [3;10]; % Vector of the layer lengths, first element is the first layer
 
 % Simulation parameters
-delta_x=0.01; % Define the spatial step [um]
+delta_x=0.1; % Define the spatial step [um]
 delta_t=2; % Define the time step [s] (this should be a derived parameter based on max value of sigma)
 
 D_int=2/(2*r/delta_x+1/D_1+1/D_2); 
@@ -110,17 +110,18 @@ C_Di = zeros(round(steps_x),1);% Initial position vector for the Dirichlet bc
 
 %% Run the iterative matrix calculation
 
+A_nI = inv(A_n);
+A_nI_Di = inv(A_n_Di);
 
 for t=1:steps_t
-    C = A_n\(A*C+G);
-    C_Di = A_n_Di\(A_Di*C_Di+G);
-    %drawnow
+    C = A_nI*(A*C+G);
+    C_Di = A_nI_Di*(A_Di*C_Di+G);
 end
 
 
 %plot(x,C_Di,x,C,x,(C+C_Di)/2); % Plot both boundary conditions as well as their mean
 plot(x_n,(C+C_Di)/2,'Marker','none','LineWidth',1,'Color','[0.65 0.66 0.89]') % Plot only the mean
-xlim([0 1.5])
+xlim([0 10])
 ylim([-0 inf]);
 set(gca,'XTick',(0:0.2:2.5),'FontSize',24)
 set(gcf,'color','w');

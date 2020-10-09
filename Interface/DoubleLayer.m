@@ -6,15 +6,15 @@ clear;close all
 
 %% Define parameters
 % Material properties
-D_1=.00026; % Define diffusivity of cathode material [um^2/s] (LSCF)
-D_2=0.0026;  % Define diffusivity of electrolyte material [um^2/s] (GDC)
-k=0.000292; % Define surface exchange coefficient of LSCF [um/s]
+D_1=4.58*1e-3; % Define diffusivity of cathode material [um^2/s] (LSCF)
+D_2=2.61*1e-1;  % Define diffusivity of electrolyte material [um^2/s] (GDC)
+k=6.05*1e-2; % Define surface exchange coefficient of LSCF [um/s]
 D_int=0.0009; %Define interfacial resistance [s/um]
 int_width=0;% Define the width of the interface region (0 is the default value)
 
 % Experimental setup
-Duration=.083; % Time of exchange in hours (found with Kiloran correction)
-L = [0.2;0.8]; % Vector of the layer lengths, first element is the first layer
+Duration=1; % Time of exchange in hours (found with Kiloran correction)
+L = [3;7]; % Vector of the layer lengths, first element is the first layer
 
 % Simulation parameters
 delta_x=0.01; % Define the spatial step [um]
